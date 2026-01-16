@@ -10,8 +10,8 @@ const StatCard = ({ title, value, subtext, icon: Icon, color = "blue" }) => {
     };
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
-            <div className="flex items-center justify-between pointer-events-none"> {/* Prevent hover effects for now */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700 transition-all hover:shadow-md">
+            <div className="flex items-center justify-between">
                 <div>
                     <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{title}</p>
                     <div className="mt-2 flex items-baseline">
@@ -21,7 +21,7 @@ const StatCard = ({ title, value, subtext, icon: Icon, color = "blue" }) => {
                         {subtext && <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">{subtext}</span>}
                     </div>
                 </div>
-                <div className={`p-3 rounded-lg ${colorClasses[color]}`}>
+                <div className={`p-3 rounded-lg ${colorClasses[color] || colorClasses.blue}`}>
                     <Icon className="w-6 h-6" />
                 </div>
             </div>
@@ -32,39 +32,47 @@ const StatCard = ({ title, value, subtext, icon: Icon, color = "blue" }) => {
 export default function SystemStats({ data }) {
     if (!data) return null;
 
+    // Support both old and new data structures to prevent crashing
+    const cpuPercent = typeof data.cpu === 'object' ? data.cpu.percent : data.cpu;
+    const memory = data.memory || data.ram || { percent: 0, used: 0 };
+    const disk = data.disk || { percent: 0, used: 0 };
+    const temp = typeof data.temperature === 'number' ? data.temperature : 0;
+
     const getStatusColor = (percent) => {
         if (percent > 90) return "red";
         if (percent > 70) return "yellow";
         return "green";
     };
 
+    const formatGB = (bytes) => (bytes / (1024 * 1024 * 1024)).toFixed(1);
+
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <StatCard
                 title="CPU Usage"
-                value={`${data.cpu}%`}
+                value={`${cpuPercent}%`}
                 icon={Cpu}
-                color={getStatusColor(data.cpu)}
+                color={getStatusColor(cpuPercent)}
             />
             <StatCard
                 title="Memory"
-                value={`${data.ram.percent}%`}
-                subtext={`${(data.ram.used / 1024 / 1024 / 1024).toFixed(1)} GB used`}
+                value={`${memory.percent}%`}
+                subtext={`${formatGB(memory.used)} GB used`}
                 icon={Activity}
-                color={getStatusColor(data.ram.percent)}
+                color={getStatusColor(memory.percent)}
             />
             <StatCard
-                title="Disk"
-                value={`${data.disk.percent}%`}
-                subtext={`${(data.disk.used / 1024 / 1024 / 1024).toFixed(1)} GB used`}
+                title="Disk Usage"
+                value={`${disk.percent}%`}
+                subtext={`${formatGB(disk.used)} GB used`}
                 icon={HardDrive}
-                color={getStatusColor(data.disk.percent)}
+                color={getStatusColor(disk.percent)}
             />
             <StatCard
                 title="Temperature"
-                value={`${data.temperature.toFixed(1)}°C`}
+                value={`${temp.toFixed(1)}°C`}
                 icon={Thermometer}
-                color={data.temperature > 80 ? "red" : "blue"}
+                color={temp > 75 ? "red" : temp > 60 ? "yellow" : "blue"}
             />
         </div>
     );

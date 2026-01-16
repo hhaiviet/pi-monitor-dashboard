@@ -1,65 +1,75 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.routes import system, n8n, websocket, processes
-from app.api.routes import router as api_router
-from app.services.history_manager import history_manager
-from app.services import system_monitor
-import os
-from dotenv import load_dotenv
+from contextlib import asynccontextmanager
 import asyncio
+from datetime import datetime
+from app.api.routes import system, n8n, processes, websocket
+from app.services.system_monitor import system_monitor
+from app.services.history_manager import history_manager
 
-load_dotenv()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    print("🚀 Starting background tasks...")
+    
+    # Create background task for storing metrics
+    async def store_metrics_loop():
+        """Store system metrics every 30 seconds"""
+        while True:
+            try:
+                stats = system_monitor.get_stats()
+                success = history_manager.store_metrics(
+                    cpu=stats['cpu']['percent'],
+                    memory=stats['memory']['percent'],
+                    disk=stats['disk']['percent'],
+                    temperature=stats.get('temperature', 0)
+                )
+                if success:
+                    print(f"✅ Metrics stored at {datetime.now()}")
+                else:
+                    print("⚠️ Failed to store metrics")
+            except Exception as e:
+                print(f"❌ Error storing metrics: {e}")
+            
+            await asyncio.sleep(30)
+    
+    # Start the task
+    task = asyncio.create_task(store_metrics_loop())
+    
+    yield
+    
+    # Shutdown
+    print("🛑 Stopping background tasks...")
+    task.cancel()
+    try:
+        await task
+    except asyncio.CancelledError:
+        pass
 
 app = FastAPI(
     title="Pi Monitor API",
-    description="Raspberry Pi Resource Monitoring API",
     version="1.0.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
+    lifespan=lifespan
 )
 
-origins = os.getenv("ALLOWED_ORIGINS", "*").split(",")
-
+# CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.include_router(api_router, prefix="/api")
-app.include_router(websocket.router, prefix="/ws")
+# Include Routers
+app.include_router(system.router, prefix="/api/system", tags=["System"])
+app.include_router(n8n.router, prefix="/api/n8n", tags=["n8n"])
+app.include_router(processes.router, prefix="/api/processes", tags=["Processes"])
+app.include_router(websocket.router, prefix="/ws", tags=["WebSocket"])
 
 @app.get("/")
-def read_root():
-    return {"status": "online", "service": "Pi Monitor API"}
-
-async def store_metrics_task():
-    """Background task to store metrics every 30 seconds"""
-    while True:
-        try:
-            stats = system_monitor.get_system_stats()
-            # Handle case where stats might return nested structure depending on implementation
-            # Based on previous implementation:
-            # { "cpu": X, "ram": { "percent": Y }, "disk": { "percent": Z }, "temperature": T }
-            
-            cpu = stats.get('cpu', 0)
-            ram = stats.get('ram', {}).get('percent', 0)
-            disk = stats.get('disk', {}).get('percent', 0)
-            temp = stats.get('temperature', 0)
-
-            history_manager.store_metrics(
-                cpu=float(cpu),
-                memory=float(ram),
-                disk=float(disk),
-                temperature=float(temp)
-            )
-        except Exception as e:
-            print(f"Error storing metrics: {e}")
-        
-        await asyncio.sleep(30)
-
-@app.on_event("startup")
-async def startup_event():
-    asyncio.create_task(store_metrics_task())
+async def root():
+    return {"message": "Pi Monitor API Running"}

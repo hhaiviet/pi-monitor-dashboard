@@ -14,7 +14,8 @@ services:
       - DATABASE_PATH=/app/data/monitor.db
     volumes:
       - ./data:/app/data
-      # Mount systemd socket to control host services (DANGEROUS but required for n8n control)
+      - ./backend/app:/app/app # Keep source code mounted for fast fixes
+      # Mount systemd socket to control host services
       - /run/systemd/system:/run/systemd/system
       - /var/run/dbus/system_bus_socket:/var/run/dbus/system_bus_socket
     extra_hosts:

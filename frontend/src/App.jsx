@@ -1,7 +1,7 @@
 import React from 'react';
 import { useWebSocket } from './hooks/useWebSocket';
 import SystemStats from './components/SystemStats';
-import N8nControl from './components/N8nControl';
+import N8nMonitor from './components/N8nMonitor';
 import ProcessList from './components/ProcessList';
 import HistoryChart from './components/HistoryChart';
 import { LayoutDashboard } from 'lucide-react';
@@ -35,7 +35,7 @@ function App() {
                 <HistoryChart />
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <N8nControl />
+                    <N8nMonitor />
                     <ProcessList />
                 </div>
             </main>
