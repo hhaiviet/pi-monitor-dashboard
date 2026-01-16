@@ -1,0 +1,26 @@
+name: CD
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [test-backend, test-frontend]
+    steps:
+    - uses: actions/checkout@v3
+    
+    # In a real scenario, we would build docker images and push to registry here.
+    # For this setup, we will just SSH and pull/restart.
+    
+    - name: Deploy to Raspberry Pi
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        password: ${{ secrets.SSH_PASSWORD }}
+        script: |
+          cd pi-monitor-dashboard
+          git pull
+          docker-compose up -d --build
