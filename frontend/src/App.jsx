@@ -8,7 +8,9 @@ import { LayoutDashboard } from 'lucide-react';
 
 function App() {
     // Use WS from environment or default to relative path
-    const wsUrl = import.meta.env.VITE_WS_URL || `ws://${window.location.hostname}:8000/ws/system`;
+    // Use WS from environment or default to relative path with auto-protocol
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = import.meta.env.VITE_WS_URL || `${protocol}//${window.location.host}/ws/system`;
     const { data, isConnected } = useWebSocket(wsUrl);
 
     return (
