@@ -59,8 +59,17 @@ class SystemMonitor:
             "version": platform.version(),
             "machine": platform.machine(),
             "processor": platform.processor(),
-            "boot_time": boot_time
+            "boot_time": boot_time,
+            "public_ip": self.get_public_ip()
         }
+
+    def get_public_ip(self) -> str:
+        """Get public IP address"""
+        try:
+            import urllib.request
+            return urllib.request.urlopen('https://api.ipify.org').read().decode('utf8')
+        except Exception:
+            return "Unavailable"
     
     def get_processes(self, limit: int = 10) -> List[Dict[str, Any]]:
         """Get list of running processes"""

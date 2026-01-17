@@ -14,18 +14,25 @@ function App() {
     const { data, isConnected } = useWebSocket(wsUrl);
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200 text-gray-900 dark:text-gray-100">
-            <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
+        <div className="min-h-screen transition-colors duration-200">
+            <nav className="bg-cyber-gray bg-opacity-90 backdrop-blur-lg border-b border-neon-blue/20 sticky top-0 z-50 shadow-[0_0_15px_rgba(0,243,255,0.1)]">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
-                        <div className="flex items-center">
-                            <LayoutDashboard className="w-8 h-8 text-blue-600" />
-                            <span className="ml-2 text-xl font-bold">Pi Monitor</span>
+                        <div className="flex items-center group cursor-pointer hover:opacity-80 transition-opacity">
+                            <div className="relative">
+                                <LayoutDashboard className="w-8 h-8 text-neon-blue drop-shadow-[0_0_5px_rgba(0,243,255,0.8)]" />
+                                <div className="absolute inset-0 blur-sm bg-neon-blue opacity-40 animate-pulse"></div>
+                            </div>
+                            <span className="ml-3 text-xl font-cyber font-bold tracking-widest text-white text-shadow-glow">
+                                PI<span className="text-neon-blue">MONITOR</span>
+                            </span>
                         </div>
-                        <div className={`flex items-center px-3 py-1 rounded-full text-sm font-medium ${isConnected ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
+                        <div className={`flex items-center px-4 py-1.5 rounded-full text-xs font-cyber tracking-widest border ${isConnected
+                                ? 'bg-neon-green/10 text-neon-green border-neon-green/50 shadow-[0_0_10px_rgba(10,255,0,0.3)]'
+                                : 'bg-red-500/10 text-red-500 border-red-500/50 shadow-[0_0_10px_rgba(255,0,0,0.3)]'
                             }`}>
-                            <div className={`w-2 h-2 rounded-full mr-2 ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
-                            {isConnected ? 'Connected' : 'Disconnected'}
+                            <div className={`w-2 h-2 rounded-full mr-2 ${isConnected ? 'bg-neon-green animate-pulse' : 'bg-red-500'}`} />
+                            {isConnected ? 'ONLINE' : 'OFFLINE'}
                         </div>
                     </div>
                 </div>
