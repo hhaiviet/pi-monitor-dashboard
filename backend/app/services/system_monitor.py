@@ -4,6 +4,9 @@ from datetime import datetime
 from typing import Dict, Any, List
 
 class SystemMonitor:
+    def __init__(self):
+        self._public_ip = None
+
     def get_stats(self) -> Dict[str, Any]:
         """Get current system statistics"""
         cpu_percent = psutil.cpu_percent(interval=None)
@@ -42,7 +45,8 @@ class SystemMonitor:
                 "percent": disk.percent
             },
             "temperature": temp,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
+            "public_ip": self.get_public_ip()
         }
 
     def get_system_info(self) -> Dict[str, Any]:
@@ -64,10 +68,15 @@ class SystemMonitor:
         }
 
     def get_public_ip(self) -> str:
-        """Get public IP address"""
+        """Get public IP address (Cached)"""
+        if self._public_ip:
+            return self._public_ip
+            
         try:
             import urllib.request
-            return urllib.request.urlopen('https://api.ipify.org').read().decode('utf8')
+            # Set timeout to avoid blocking
+            self._public_ip = urllib.request.urlopen('https://api.ipify.org', timeout=3).read().decode('utf8')
+            return self._public_ip
         except Exception:
             return "Unavailable"
     
